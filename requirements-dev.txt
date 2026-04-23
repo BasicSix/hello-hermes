@@ -1,0 +1,11 @@
+# Requirements for hello-hermes development
+
+# Core dependencies
+pytest>=7.0.0
+black>=23.0.0
+flake8>=6.0.0
+mypy>=1.0.0
+
+# Optional: For code coverage
+coverage>=6.0.0
+codecov>=2.1.0

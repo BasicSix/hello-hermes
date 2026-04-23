@@ -1,0 +1,4 @@
+# Requirements for hello-hermes
+
+# Core functionality (none yet - pure Python standard library)
+# All dependencies are in requirements-dev.txt
