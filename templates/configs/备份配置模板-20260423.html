@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>自动化备份配置模板 - 2026年4月23日</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f7fa;
+        }
+        .container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        h1 {
+            margin: 0;
+            font-size: 2.5em;
+        }
+        .subtitle {
+            opacity: 0.9;
+            font-style: italic;
+        }
+        .section {
+            padding: 30px;
+            border-bottom: 1px solid #eee;
+        }
+        .section:last-child {
+            border-bottom: none;
+        }
+        h2 {
+            color: #667eea;
+            border-left: 4px solid #667eea;
+            padding-left: 15px;
+            margin-top: 0;
+        }
+        code {
+            background: #f1f3f4;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Consolas', 'Monaco', monospace;
+        }
+        pre {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 15px;
+            overflow-x: auto;
+            font-size: 0.9em;
+        }
+        .highlight {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        footer {
+            background: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            margin: 5px;
+            transition: transform 0.2s;
+        }
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+            h1 { font-size: 2em; }
+            .section { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 头部 -->
+        <header>
+            <h1>💾 自动化备份配置模板</h1>
+            <p class="subtitle">hello-hermes | 2026年4月23日 | 数据保护指南</p>
+        </header>
+
+        <!-- 项目信息 -->
+        <div class="section">
+            <h2>📋 项目信息</h2>
+            <div class="highlight">
+                <p><strong>项目名称:</strong> hello-hermes</p>
+                <p><strong>备份工具:</strong> rsync + tar</p>
+                <p><strong>创建时间:</strong> 2026年4月23日</p>
+            </div>
+        </div>
+
+        <!-- 备份策略 -->
+        <div class="section">
+            <h2>📊 备份策略</h2>
+            
+            <table>
+                <tr>
+                    <th>数据类型</th>
+                    <th>频率</th>
+                    <th>保留天数</th>
+                </tr>
+                <tr>
+                    <td>数据库</td>
+                    <td>每日</td>
+                    <td>7天</td>
+                </tr>
+                <tr>
+                    <td>配置</td>
+                    <td>每周</td>
+                    <td>4周</td>
+                </tr>
+                <tr>
+                    <td>完整系统</td>
+                    <td>每月</td>
+                    <td>12个月</td>
+                </tr>
+            </table>
+            
+            <h3>备份内容</h3>
+            <pre><code># 数据库备份
+/postgresql/data/
+/postgresql/backups/
+
+# 配置文件
+/etc/nginx/
+/etc/letsencrypt/
+/home/hermes/.hermes/
+
+# 应用数据
+/opt/hermes/data/
+/opt/hermes/logs/</code></pre>
+        </div>
+
+        <!-- 备份脚本 -->
+        <div class="section">
+            <h2>⚙️ 备份脚本</h2>
+            
+            <h3>主备份脚本</h3>
+            <pre><code>#!/bin/bash
+# backup-hermes.sh
+
+DATE=$(date +%Y%m%d_%H%M%S)
+BACKUP_DIR="/backup/hermes/$DATE"
+mkdir -p $BACKUP_DIR
+
+# 数据库备份
+pg_dump hermes > $BACKUP_DIR/db_$DATE.sql
+
+# 配置文件备份
+tar czf $BACKUP_DIR/configs.tar.gz /etc/nginx /etc/letsencrypt /home/hermes/.hermes
+
+# 应用数据备份
+tar czf $BACKUP_DIR/app_data.tar.gz /opt/hermes/data /opt/hermes/logs
+
+# 清理旧备份 (保留7天)
+find /backup/hermes -type d -mtime +7 -exec rm -rf {} \;</code></pre>
+        </div>
+
+        <!-- 定时任务 -->
+        <div class="section">
+            <h2>⏰ 定时任务</h2>
+            <pre><code># crontab -e
+# 每日凌晨2点执行
+0 2 * * * /opt/hermes/backup.sh >> /var/log/backup.log 2>&1
+
+# 每周日凌晨3点执行配置备份
+0 3 * * 0 /opt/hermes/backup-configs.sh >> /var/log/backup.log 2>&1</code></pre>
+        </div>
+
+        <!-- 恢复流程 -->
+        <div class="section">
+            <h2>🔄 恢复流程</h2>
+            
+            <h3>数据库恢复</h3>
+            <pre><code># 停止应用
+sudo supervisorctl stop hermes-dashboard
+
+# 恢复数据库
+dropdb hermes
+createdb hermes
+psql hermes < db_backup.sql
+
+# 启动应用
+sudo supervisorctl start hermes-dashboard</code></pre>
+
+            <h3>完整恢复</h3>
+            <pre><code># 停止服务
+sudo systemctl stop nginx postgresql redis-server
+
+# 恢复文件
+tar xzf configs.tar.gz -C /
+tar xzf app_data.tar.gz -C /
+
+# 重启服务
+sudo systemctl start nginx postgresql redis-server</code></pre>
+        </div>
+
+        <!-- Hermes 备份集成 -->
+        <div class="section">
+            <h2>🔗 Hermes 备份集成</h2>
+            <p>Hermes 提供原生备份命令，支持配置、日志、轨迹的自动化归档：</p>
+            
+            <h3>1️⃣ 启用备份功能</h3>
+            <pre><code># 在 ~/.hermes/config.yaml 中启用
+backup:
+  enabled: true
+  retention_days: 30
+  target_path: /backup/hermes</code></pre>
+            
+            <h3>2️⃣ 手动触发备份</h3>
+            <pre><code># 备份所有 Hermes 数据（配置+日志+会话）
+hermes backup --full
+
+# 仅备份配置和环境变量
+hermes backup --config</code></pre>
+            
+            <h3>3️⃣ 集成到 cron（每日凌晨2点）</h3>
+            <pre><code>0 2 * * * /home/basicsix/.local/bin/hermes backup --full >> /var/log/hermes-backup.log 2>&1</code></pre>
+            
+            <div class="success">
+                <p>✅ <strong>验证成功:</strong> 备份后检查 <code>/backup/hermes/</code> 目录是否存在带时间戳的 <code>hermes-backup-*.tar.gz</code> 文件</p>
+            </div>
+        </div>
+
+        <!-- 操作按钮 -->
+        <div class="section" style="text-align: center;">
+            <h2>🚀 立即配置</h2>
+            <p>选择最适合你的方式开始备份配置</p>
+            
+            <button onclick="copyToClipboard('backup-script')" class="btn">📋 复制备份脚本</button>
+            <button onclick="copyToClipboard('restore-procedure')" class="btn">⚙️ 复制恢复流程</button>
+            <button onclick="downloadTemplate()" class="btn">💾 下载完整模板</button>
+        </div>
+
+        <!-- 页脚 -->
+        <footer>
+            <p><strong>文档版本:</strong> v1.0 | <strong>生成日期:</strong> 2026年4月23日</p>
+            <p>📂 文件位置: C:\Users\Basicsix\.hermes-configs\backup-config-template-20260423.html</p>
+            <p>💡 <strong>提示:</strong> 建议在部署前仔细阅读恢复流程说明</p>
+        </footer>
+    </div>
+
+    <script>
+        function copyToClipboard(type) {
+            let text = '';
+            if (type === 'backup-script') {
+                text = `#!/bin/bash
+# backup-hermes.sh
+
+DATE=$(date +%Y%m%d_%H%M%S)
+BACKUP_DIR="/backup/hermes/$DATE"
+mkdir -p $BACKUP_DIR
+
+# 数据库备份
+pg_dump hermes > $BACKUP_DIR/db_$DATE.sql
+
+# 配置文件备份
+tar czf $BACKUP_DIR/configs.tar.gz /etc/nginx /etc/letsencrypt /home/hermes/.hermes
+
+# 应用数据备份
+tar czf $BACKUP_DIR/app_data.tar.gz /opt/hermes/data /opt/hermes/logs
+
+# 清理旧备份 (保留7天)
+find /backup/hermes -type d -mtime +7 -exec rm -rf {} \\;`;
+            } else if (type === 'restore-procedure') {
+                text = `# 数据库恢复
+sudo supervisorctl stop hermes-dashboard
+
+dropdb hermes
+createdb hermes
+psql hermes < db_backup.sql
+
+sudo supervisorctl start hermes-dashboard
+
+# 完整恢复
+sudo systemctl stop nginx postgresql redis-server
+
+tar xzf configs.tar.gz -C /
+tar xzf app_data.tar.gz -C /
+
+sudo systemctl start nginx postgresql redis-server`;
+            }
+            
+            navigator.clipboard.writeText(text).then(() => {
+                alert('✅ 配置已复制到剪贴板!');
+            }).catch(err => {
+                console.error('复制失败:', err);
+            });
+        }
+
+        function downloadTemplate() {
+            const element = document.createElement('a');
+            const file = new Blob([document.documentElement.outerHTML], {type: 'text/html'});
+            element.href = URL.createObjectURL(file);
+            element.download = 'backup-config-template-20260423.html';
+            document.body.appendChild(element);
+            element.click();
+            document.body.removeChild(element);
+        }
+    </script>
+</body>
+</html>

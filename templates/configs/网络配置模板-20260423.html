@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nginx + SSL 配置模板 - 2026年4月23日</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f7fa;
+        }
+        .container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        h1 {
+            margin: 0;
+            font-size: 2.5em;
+        }
+        .subtitle {
+            opacity: 0.9;
+            font-style: italic;
+        }
+        .section {
+            padding: 30px;
+            border-bottom: 1px solid #eee;
+        }
+        .section:last-child {
+            border-bottom: none;
+        }
+        h2 {
+            color: #667eea;
+            border-left: 4px solid #667eea;
+            padding-left: 15px;
+            margin-top: 0;
+        }
+        code {
+            background: #f1f3f4;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Consolas', 'Monaco', monospace;
+        }
+        pre {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 15px;
+            overflow-x: auto;
+            font-size: 0.9em;
+        }
+        .highlight {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .warning {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 6px;
+            padding: 15px;
+            color: #721c24;
+        }
+        footer {
+            background: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            margin: 5px;
+            transition: transform 0.2s;
+        }
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+            h1 { font-size: 2em; }
+            .section { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 头部 -->
+        <header>
+            <h1>🌐 Nginx + SSL 配置模板</h1>
+            <p class="subtitle">hello-hermes | 2026年4月23日 | Web服务器优化指南</p>
+        </header>
+
+        <!-- 项目信息 -->
+        <div class="section">
+            <h2>📋 项目信息</h2>
+            <div class="highlight">
+                <p><strong>项目名称:</strong> hello-hermes</p>
+                <p><strong>Web服务器:</strong> Nginx 1.24</p>
+                <p><strong>SSL证书:</strong> Let's Encrypt</p>
+                <p><strong>创建时间:</strong> 2026年4月23日</p>
+            </div>
+        </div>
+
+        <!-- 基础配置 -->
+        <div class="section">
+            <h2>⚙️ 基础配置</h2>
+            
+            <h3>安装依赖</h3>
+            <pre><code>sudo apt install -y nginx certbot python3-certbot-nginx</code></pre>
+
+            <h3>Nginx 主配置</h3>
+            <pre><code># /etc/nginx/nginx.conf
+user www-data;
+worker_processes auto;
+pid /run/nginx.pid;
+
+events {
+    worker_connections 768;
+}
+
+http {
+    sendfile on;
+    tcp_nopush on;
+    tcp_nodelay on;
+    keepalive_timeout 65;
+    types_hash_max_size 2048;
+    include /etc/nginx/mime.types;
+    default_type application/octet-stream;
+}</code></pre>
+        </div>
+
+        <!-- HTTPS 反向代理 -->
+        <div class="section">
+            <h2>🔒 HTTPS 反向代理</h2>
+            <pre><code>server {
+    listen 443 ssl http2;
+    server_name your-domain.com www.your-domain.com;
+    
+    # SSL配置
+    ssl_certificate /etc/letsencrypt/live/your-domain.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/your-domain.com/privkey.pem;
+    
+    # 安全头
+    add_header X-Frame-Options DENY;
+    add_header X-Content-Type-Options nosniff;
+    add_header X-XSS-Protection "1; mode=block";
+    
+    location / {
+        proxy_pass http://127.0.0.1:9119;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+    }
+}</code></pre>
+        </div>
+
+        <!-- 安全配置 -->
+        <div class="section">
+            <h2>🛡️ 安全配置</h2>
+            
+            <h3>防火墙设置</h3>
+            <pre><code>sudo ufw allow 80
+sudo ufw allow 443</code></pre>
+
+            <h3>SSL续订脚本</h3>
+            <pre><code>#!/bin/bash
+if certbot renew --quiet; then
+  systemctl reload nginx
+  echo "[OK] SSL renewed and nginx reloaded" | logger
+else
+  echo "[ERROR] SSL renewal failed" | logger
+fi</code></pre>
+            
+            <div class="warning">
+                <p>⚠️ <strong>重要提醒:</strong> 生产环境务必启用 HSTS，设置合理的缓存策略</p>
+            </div>
+        </div>
+
+        <!-- 操作按钮 -->
+        <div class="section" style="text-align: center;">
+            <h2>🚀 立即配置</h2>
+            <p>选择最适合你的方式开始网络配置</p>
+            
+            <button onclick="copyToClipboard('nginx-config')" class="btn">📋 复制Nginx配置</button>
+            <button onclick="copyToClipboard('ssl-script')" class="btn">⚙️ 复制SSL脚本</button>
+            <button onclick="downloadTemplate()" class="btn">💾 下载完整模板</button>
+        </div>
+
+        <!-- 页脚 -->
+        <footer>
+            <p><strong>文档版本:</strong> v1.0 | <strong>生成日期:</strong> 2026年4月23日</p>
+            <p>📂 文件位置: C:\Users\Basicsix\.hermes-configs\network-config-template-20260423.html</p>
+            <p>💡 <strong>提示:</strong> 建议在部署前仔细阅读安全配置说明</p>
+        </footer>
+    </div>
+
+    <script>
+        function copyToClipboard(type) {
+            let text = '';
+            if (type === 'nginx-config') {
+                text = `server {
+    listen 443 ssl http2;
+    server_name your-domain.com www.your-domain.com;
+    
+    ssl_certificate /etc/letsencrypt/live/your-domain.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/your-domain.com/privkey.pem;
+    
+    add_header X-Frame-Options DENY;
+    add_header X-Content-Type-Options nosniff;
+    add_header X-XSS-Protection "1; mode=block";
+    
+    location / {
+        proxy_pass http://127.0.0.1:9119;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+    }
+}`;
+
+            } else if (type === 'ssl-script') {
+                text = `#!/bin/bash
+certbot renew --quiet --post-hook "systemctl reload nginx"`;
+            }
+            
+            navigator.clipboard.writeText(text).then(() => {
+                alert('✅ 配置已复制到剪贴板!');
+            }).catch(err => {
+                console.error('复制失败:', err);
+            });
+        }
+
+        function downloadTemplate() {
+            const element = document.createElement('a');
+            const file = new Blob([document.documentElement.outerHTML], {type: 'text/html'});
+            element.href = URL.createObjectURL(file);
+            element.download = 'network-config-template-20260423.html';
+            document.body.appendChild(element);
+            element.click();
+            document.body.removeChild(element);
+        }
+    </script>
+</body>
+</html>

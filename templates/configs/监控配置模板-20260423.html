@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prometheus + Grafana 监控配置模板 - 2026年4月23日</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f7fa;
+        }
+        .container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        h1 {
+            margin: 0;
+            font-size: 2.5em;
+        }
+        .subtitle {
+            opacity: 0.9;
+            font-style: italic;
+        }
+        .section {
+            padding: 30px;
+            border-bottom: 1px solid #eee;
+        }
+        .section:last-child {
+            border-bottom: none;
+        }
+        h2 {
+            color: #667eea;
+            border-left: 4px solid #667eea;
+            padding-left: 15px;
+            margin-top: 0;
+        }
+        code {
+            background: #f1f3f4;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Consolas', 'Monaco', monospace;
+        }
+        pre {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 15px;
+            overflow-x: auto;
+            font-size: 0.9em;
+        }
+        .highlight {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        footer {
+            background: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            margin: 5px;
+            transition: transform 0.2s;
+        }
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+            h1 { font-size: 2em; }
+            .section { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 头部 -->
+        <header>
+            <h1>📊 Prometheus + Grafana 监控配置模板</h1>
+            <p class="subtitle">hello-hermes | 2026年4月23日 | 性能监控指南</p>
+        </header>
+
+        <!-- 项目信息 -->
+        <div class="section">
+            <h2>📋 项目信息</h2>
+            <div class="highlight">
+                <p><strong>项目名称:</strong> hello-hermes</p>
+                <p><strong>监控工具:</strong> Prometheus + Grafana</p>
+                <p><strong>创建时间:</strong> 2026年4月23日</p>
+            </div>
+        </div>
+
+        <!-- 环境要求 -->
+        <div class="section">
+            <h2>⚙️ 环境要求</h2>
+            
+            <table>
+                <tr>
+                    <th>组件</th>
+                    <th>推荐规格</th>
+                    <th>最低要求</th>
+                </tr>
+                <tr>
+                    <td>CPU</td>
+                    <td>4+ cores</td>
+                    <td>2 cores</td>
+                </tr>
+                <tr>
+                    <td>内存</td>
+                    <td>16GB+</td>
+                    <td>8GB</td>
+                </tr>
+                <tr>
+                    <td>存储</td>
+                    <td>200GB SSD+</td>
+                    <td>50GB SSD</td>
+                </tr>
+            </table>
+            
+            <pre><code># Prometheus
+wget https://github.com/prometheus/prometheus/releases/download/v2.47.2/prometheus-2.47.2.linux-amd64.tar.gz
+tar xvf prometheus-*.tar.gz
+
+# Grafana
+wget https://dl.grafana.com/oss/release/grafana_10.2.0_amd64.deb
+sudo dpkg -i grafana_10.2.0_amd64.deb</code></pre>
+        </div>
+
+        <!-- Prometheus 配置 -->
+        <div class="section">
+            <h2>🔍 Prometheus 配置</h2>
+            <pre><code># prometheus.yml
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'hermes'
+    static_configs:
+      - targets: ['localhost:9119']
+    metrics_path: '/api/metrics'
+
+  - job_name: 'system'
+    static_configs:
+      - targets: ['localhost:9090']</code></pre>
+        </div>
+
+        <!-- Grafana 配置 -->
+        <div class="section">
+            <h2>📈 Grafana 配置</h2>
+            
+            <h3>数据源设置</h3>
+            <pre><code>{
+  "name": "Prometheus",
+  "type": "prometheus",
+  "url": "http://localhost:9090"
+}</code></pre>
+
+            <h3>仪表板指标</h3>
+            <ul>
+                <li><strong>CPU使用率:</strong> <code>rate(process_cpu_seconds_total[5m])</code></li>
+                <li><strong>内存使用:</strong> <code>process_resident_memory_bytes</code></li>
+                <li><strong>响应时间:</strong> <code>http_request_duration_seconds_bucket</code></li>
+                <li><strong>错误率:</strong> <code>http_requests_total{status=~"5.."}</code></li>
+            </ul>
+        </div>
+
+        <!-- 告警配置 -->
+        <div class="section">
+            <h2>🔔 告警规则</h2>
+            <pre><code>groups:
+  - name: hermes-alerts
+    rules:
+      - alert: HighCPUUsage
+        expr: rate(process_cpu_seconds_total[5m]) > 0.8
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage on {{ $labels.instance }}"
+          description: "CPU usage is above 80%"</code></pre>
+        </div>
+
+        <!-- Hermes 监控集成 -->
+        <div class="section">
+            <h2>🔗 Hermes 监控集成</h2>
+            <p>Hermes Dashboard 内置 Prometheus 指标端点，开箱即用：</p>
+            
+            <h3>1️⃣ 启用指标暴露</h3>
+            <pre><code># 启动时添加 --enable-metrics 参数
+hermes dashboard --port 9119 --enable-metrics</code></pre>
+            
+            <h3>2️⃣ 验证端点</h3>
+            <pre><code>curl http://localhost:9119/api/metrics</code></pre>
+            
+            <h3>3️⃣ Prometheus 抓取配置（追加到 prometheus.yml）</h3>
+            <pre><code>  - job_name: 'hermes'
+    static_configs:
+      - targets: ['localhost:9119']
+    metrics_path: '/api/metrics'
+    # 可选：添加标签便于过滤
+    params:
+      format: ['prometheus']</code></pre>
+            
+            <div class="success">
+                <p>✅ <strong>验证成功标志:</strong> Prometheus UI 中可见 <code>hermes_*</code> 开头的指标（如 <code>hermes_request_count_total</code>）</p>
+            </div>
+        </div>
+
+        <!-- 操作按钮 -->
+        <div class="section" style="text-align: center;">
+            <h2>🚀 立即配置</h2>
+            <p>选择最适合你的方式开始监控配置</p>
+            
+            <button onclick="copyToClipboard('prometheus-config')" class="btn">📋 复制Prometheus配置</button>
+            <button onclick="copyToClipboard('grafana-dashboard')" class="btn">⚙️ 复制Grafana配置</button>
+            <button onclick="downloadTemplate()" class="btn">💾 下载完整模板</button>
+        </div>
+
+        <!-- 页脚 -->
+        <footer>
+            <p><strong>文档版本:</strong> v1.0 | <strong>生成日期:</strong> 2026年4月23日</p>
+            <p>📂 文件位置: C:\Users\Basicsix\.hermes-configs\monitoring-config-template-20260423.html</p>
+            <p>💡 <strong>提示:</strong> 建议在部署前仔细阅读监控指标说明</p>
+        </footer>
+    </div>
+
+    <script>
+        function copyToClipboard(type) {
+            let text = '';
+            if (type === 'prometheus-config') {
+                text = `# prometheus.yml
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'hermes'
+    static_configs:
+      - targets: ['localhost:9119']
+    metrics_path: '/api/metrics'
+
+  - job_name: 'system'
+    static_configs:
+      - targets: ['localhost:9090']`;
+            } else if (type === 'grafana-dashboard') {
+                text = `{
+  "name": "Prometheus",
+  "type": "prometheus",
+  "url": "http://localhost:9090"
+}`;
+            }
+            
+            navigator.clipboard.writeText(text).then(() => {
+                alert('✅ 配置已复制到剪贴板!');
+            }).catch(err => {
+                console.error('复制失败:', err);
+            });
+        }
+
+        function downloadTemplate() {
+            const element = document.createElement('a');
+            const file = new Blob([document.documentElement.outerHTML], {type: 'text/html'});
+            element.href = URL.createObjectURL(file);
+            element.download = 'monitoring-config-template-20260423.html';
+            document.body.appendChild(element);
+            element.click();
+            document.body.removeChild(element);
+        }
+    </script>
+</body>
+</html>

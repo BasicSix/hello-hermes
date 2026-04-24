@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>网络安全配置模板 - 2026年4月23日</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f7fa;
+        }
+        .container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        h1 {
+            margin: 0;
+            font-size: 2.5em;
+        }
+        .subtitle {
+            opacity: 0.9;
+            font-style: italic;
+        }
+        .section {
+            padding: 30px;
+            border-bottom: 1px solid #eee;
+        }
+        .section:last-child {
+            border-bottom: none;
+        }
+        h2 {
+            color: #667eea;
+            border-left: 4px solid #667eea;
+            padding-left: 15px;
+            margin-top: 0;
+        }
+        code {
+            background: #f1f3f4;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Consolas', 'Monaco', monospace;
+        }
+        pre {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 15px;
+            overflow-x: auto;
+            font-size: 0.9em;
+        }
+        .warning {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 6px;
+            padding: 15px;
+            color: #721c24;
+        }
+        footer {
+            background: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            margin: 5px;
+            transition: transform 0.2s;
+        }
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+            h1 { font-size: 2em; }
+            .section { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 头部 -->
+        <header>
+            <h1>🛡️ 网络安全配置模板</h1>
+            <p class="subtitle">hello-hermes | 2026年4月23日 | 安全防护指南</p>
+        </header>
+
+        <!-- 项目信息 -->
+        <div class="section">
+            <h2>📋 项目信息</h2>
+            <div class="highlight">
+                <p><strong>项目名称:</strong> hello-hermes</p>
+                <p><strong>安全框架:</strong> Fail2Ban + UFW + SSL</p>
+                <p><strong>创建时间:</strong> 2026年4月23日</p>
+            </div>
+        </div>
+
+        <!-- 基础安全 -->
+        <div class="section">
+            <h2>🔒 基础安全</h2>
+            
+            <h3>防火墙配置</h3>
+            <pre><code># UFW 基础设置
+sudo ufw default deny incoming
+sudo ufw default allow outgoing
+
+# 允许必要服务
+sudo ufw allow OpenSSH
+sudo ufw allow 80/tcp
+sudo ufw allow 443/tcp
+sudo ufw enable
+
+# 查看状态
+sudo ufw status verbose</code></pre>
+        </div>
+
+        <!-- 高级安全 -->
+        <div class="section">
+            <h2>🛡️ 高级安全</h2>
+            
+            <h3>SSH 加固</h3>
+            <pre><code># /etc/ssh/sshd_config
+Port 2222
+PermitRootLogin no
+PasswordAuthentication no
+AllowUsers hermes
+MaxAuthTries 3</code></pre>
+
+            <h3>应用安全头</h3>
+            <pre><code># Nginx 安全配置
+add_header X-Frame-Options "DENY";
+add_header X-Content-Type-Options "nosniff";
+add_header X-XSS-Protection "1; mode=block";
+add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+add_header Content-Security-Policy "default-src 'self'";
+</code></pre>
+        </div>
+
+        <!-- 入侵检测 -->
+        <div class="section">
+            <h2>🔍 入侵检测</h2>
+            
+            <h3>日志监控</h3>
+            <pre><code># 实时监控系统日志
+tail -f /var/log/auth.log | grep -i "failed\|invalid"
+tail -f /var/log/nginx/access.log | awk '$9 ~ /40[0-9]|50[0-9]/'
+
+# 检测暴力破解
+grep "Failed password" /var/log/auth.log | awk '{print $11}' | sort | uniq -c | sort -nr</code></pre>
+
+            <h3>文件完整性检查</h3>
+            <pre><code># 安装 aide
+sudo apt install aide
+
+# 初始化数据库
+aide --init
+sudo cp /var/lib/aide/aide.db.new.gz /var/lib/aide/aide.db.gz
+
+# 定期检查
+aide --check</code></pre>
+        </div>
+
+        <!-- Fail2Ban 配置 -->
+        <div class="section">
+            <h2>🚫 Fail2Ban 配置</h2>
+            <pre><code># /etc/fail2ban/jail.local
+[DEFAULT]
+bantime = 1h
+findtime = 10m
+maxretry = 3
+
+[sshd]
+enabled = true
+port = ssh
+filter = sshd
+logpath = /var/log/auth.log
+maxretry = 3
+
+[nginx-http-auth]
+enabled = true
+port = http,https
+filter = nginx-http-auth
+logpath = /var/log/nginx/error.log</code></pre>
+        </div>
+
+        <!-- 操作按钮 -->
+        <div class="section" style="text-align: center;">
+            <h2>🚀 立即配置</h2>
+            <p>选择最适合你的方式开始安全配置</p>
+            
+            <button onclick="copyToClipboard('ufw-config')" class="btn">📋 复制防火墙配置</button>
+            <button onclick="copyToClipboard('fail2ban-config')" class="btn">⚙️ 复制Fail2Ban配置</button>
+            <button onclick="downloadTemplate()" class="btn">💾 下载完整模板</button>
+        </div>
+
+        <!-- Hermes 安全集成 -->
+        <div class="section">
+            <h2>🔗 Hermes 安全集成</h2>
+            <p>Hermes 提供密钥管理、配置加密与审计日志能力，与系统级安全无缝协同：</p>
+            
+            <h3>1️⃣ 敏感配置加密</h3>
+            <pre><code># 使用 Hermes 内置加密保护 .env 文件
+hermes encrypt --input ~/.hermes/.env --output ~/.hermes/.env.enc
+
+# 启动时自动解密
+hermes dashboard --decrypt-env ~/.hermes/.env.enc</code></pre>
+            
+            <h3>2️⃣ API 密钥轮换（支持 OpenAI/LongCat）</h3>
+            <pre><code># 自动轮换并更新 config.yaml
+hermes rotate-api-key --provider openai --days 90
+
+# 查看密钥使用统计
+hermes api-stats --provider longcat</code></pre>
+            
+            <h3>3️⃣ 审计日志启用</h3>
+            <pre><code># 在 ~/.hermes/config.yaml 中添加
+audit:
+  enabled: true
+  log_path: /var/log/hermes-audit.log
+  level: high</code></pre>
+            
+            <div class="warning">
+                <p>⚠️ <strong>重要:</strong> 启用审计日志会增加 I/O 开销，请确保 <code>/var/log</code> 有足够空间</p>
+            </div>
+        </div>
+
+        <!-- 页脚 -->
+        <footer>
+            <p><strong>文档版本:</strong> v1.0 | <strong>生成日期:</strong> 2026年4月23日</p>
+            <p>📂 文件位置: C:\Users\Basicsix\.hermes-configs\security-config-template-20260423.html</p>
+            <p>💡 <strong>提示:</strong> 建议在部署前仔细阅读安全配置说明</p>
+        </footer>
+    </div>
+
+    <script>
+        function copyToClipboard(type) {
+            let text = '';
+            if (type === 'ufw-config') {
+                text = `# UFW 防火墙配置
+sudo ufw default deny incoming
+sudo ufw default allow outgoing
+
+sudo ufw allow OpenSSH
+sudo ufw allow 80/tcp
+sudo ufw allow 443/tcp
+sudo ufw enable`;
+            } else if (type === 'fail2ban-config') {
+                text = `# /etc/fail2ban/jail.local
+[DEFAULT]
+bantime = 1h
+findtime = 10m
+maxretry = 3
+
+[sshd]
+enabled = true
+port = ssh
+filter = sshd
+logpath = /var/log/auth.log
+maxretry = 3`;
+            }
+            
+            navigator.clipboard.writeText(text).then(() => {
+                alert('✅ 配置已复制到剪贴板!');
+            }).catch(err => {
+                console.error('复制失败:', err);
+            });
+        }
+
+        function downloadTemplate() {
+            const element = document.createElement('a');
+            const file = new Blob([document.documentElement.outerHTML], {type: 'text/html'});
+            element.href = URL.createObjectURL(file);
+            element.download = 'security-config-template-20260423.html';
+            document.body.appendChild(element);
+            element.click();
+            document.body.removeChild(element);
+        }
+    </script>
+</body>
+</html>
